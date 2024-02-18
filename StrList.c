@@ -264,7 +264,7 @@ void StrList_removeAt(StrList* StrList, int index)
     {
         count++;
         prev = current;
-        current = current->_next;
+        current = current->_next; 
     }  
     if (prev == NULL) {
                 StrList->_head = current->_next; // Update the head if the first node is to be removed
