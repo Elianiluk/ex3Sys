@@ -1,7 +1,7 @@
-all:nodelist
+all:StrList
 
-nodelist: main.o StrList.o
-	gcc -Wall main.o StrList.o -o nodelist
+StrList: main.o StrList.o
+	gcc -Wall main.o StrList.o -o StrList
 main.o: main.c StrList.h
 	gcc -Wall -c main.c
 StrList.o: StrList.c StrList.h
@@ -10,4 +10,4 @@ StrList.o: StrList.c StrList.h
 .PHONY: clean all
 
 clean:
-	rm *.o nodelist	
+	rm *.o StrList	

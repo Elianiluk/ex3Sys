@@ -242,7 +242,8 @@ void StrList_remove(StrList* StrList, const char* data)
             } else {
                 prev->_next = current->_next; // Update the previous node's next pointer
             }
-            free(current); // Free the memory allocated for the node
+            free(current);// Free the memory allocated for the node
+            StrList->size--;   
             current = prev == NULL ? StrList->_head : prev->_next; // Move to the next node
         } else {
             // If it doesn't match, move to the next node
@@ -250,6 +251,7 @@ void StrList_remove(StrList* StrList, const char* data)
             current = current->_next;
         }
     }
+
 }
 
 /*
@@ -271,6 +273,7 @@ void StrList_removeAt(StrList* StrList, int index)
             } else {
                 prev->_next = current->_next; // Update the previous node's next pointer
             }
+    StrList->size--;        
 }
 
 /*
@@ -331,10 +334,61 @@ void StrList_reverse( StrList* Strlist)
 /*
  * Sort the given list in lexicographical order 
  */
-void StrList_sort( StrList* StrList);
+void StrList_sort( StrList* StrList)
+{
+    if(StrList->size==1 || StrList->size==0)
+        return;
+    Node* current = StrList->_head;
+    Node* next = current->_next;
+    Node* prev=NULL;
+    while (next!=NULL)
+    {
+        if (whoseBigger(current->word,next->word)==1 || whoseBigger(current->word,next->word)==-1)
+        {
+            current=current->_next;
+            next=next->_next;
+            prev=prev->_next;
+        }
+        
+    }
+    
+}
+
+int whoseBigger(char *word1,char *word2)
+{
+    char *data1=word1;
+    char *data2=word2;
+    int i=0;
+   while(word1[i]!='\0' || word2[i]!='\0')
+   {
+        if(word1[i]<word2[i])
+            return 1;
+        if(word1[i]>word2[i])
+            return 0;
+        i++;        
+   } 
+    if (word1[i]=='\0' && word2[i]=='\0')
+        return -1;
+    else if (word1[i]=='\0' && word2[i]!='\0')   
+        return 1;
+    else 
+        return 0;
+}
 
 /*
  * Checks if the given list is sorted in lexicographical order
  * returns 1 for sorted,   0 otherwise
  */
-int StrList_isSorted(StrList* StrList);
+int StrList_isSorted(StrList* Strlist)
+{
+    StrList *list=StrList_alloc();
+    list=StrList_clone(Strlist);
+    StrList_sort(list);
+    if(StrList_isEqual(Strlist,list)==1)
+    {
+        StrList_free(list);
+        return 1;
+    }
+    StrList_free(list);
+    return 1;   
+}
