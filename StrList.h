@@ -25,7 +25,7 @@ typedef struct _node
 struct _StrList
 {
 	Node *_head;
-	size_t size;
+	int size;
 };
 typedef struct _StrList StrList;
 
@@ -44,7 +44,7 @@ void StrList_free(StrList* StrList);
 /*
  * Returns the number of elements in the StrList.
  */
-size_t StrList_size(const StrList* StrList);
+int StrList_size(const StrList* StrList);
 
 /*
  * Inserts an element in the end of the StrList.
@@ -82,6 +82,7 @@ int StrList_printLen(const StrList* Strlist);
 Given a string, return the number of times it exists in the list.
 */
 int StrList_count(StrList* StrList, const char* data);
+void StrList_removeAll(StrList* StrList);
 
 /*
 	Given a string and a list, remove all the appearences of this string in the list.

@@ -1,8 +1,10 @@
 #include <stdio.h>
+#include <string.h>
 #include "StrList.h"
 
 int stringLength(const char *str);
 int compareStrings(const char *str1, const char *str2);
+int compareStringsLex(const char *str1, const char *str2);
 /*
  * StrList represents a StrList data structure.
  */
@@ -26,13 +28,21 @@ StrList* StrList_alloc()
     return list;
 }
 
+void free_node(Node* n)
+{
+    if (n != NULL) {
+        free(n->word); // Free the memory allocated for the string
+        free(n); // Free the memory allocated for the node
+    }
+}
+
 /*
  * Frees the memory and resources allocated to StrList.
  * If StrList==NULL does nothing (same as free).
  */
 void StrList_free(StrList* StrList)
 {
-    if(StrList==NULL)
+    if(StrList->_head==NULL || StrList->size==0)
         return;
     Node *head=StrList->_head;
     Node *h;
@@ -40,15 +50,18 @@ void StrList_free(StrList* StrList)
     {
         h=head;
         head=head->_next;
-        free(head);
-    }
-    free(StrList);
+        free(h->word);
+        free(h);
+    }      
+    StrList->size=0;
+    StrList->_head=NULL;          
+    
 }
 
 /*
  * Returns the number of elements in the StrList.
  */
-size_t StrList_size(const StrList* StrList)
+int StrList_size(const StrList* StrList)
 {
     return StrList->size;
 }
@@ -65,7 +78,7 @@ void StrList_insertLast(StrList* StrList,const char* data)
         printf("couldnt allocate memory");
         exit(1);
     }
-    temp->word=data;
+    temp->word=(char*)data;
     temp->_next=NULL;
     
     if (StrList->_head==NULL)
@@ -109,7 +122,7 @@ void StrList_insertAt(StrList* StrList,const char* data,int index)
         printf("couldnt allocate memory");
         exit(1);
     }
-    temp->word=data;
+    temp->word=(char*)data;
     temp->_next=NULL;
     Node *nodenext=nodeIndex->_next;
     nodeIndex->_next=temp;
@@ -133,10 +146,11 @@ void StrList_print(const StrList* StrList)
     Node *temp=StrList->_head;
     while(temp!=NULL)
     {
-        printf("%s,",temp->word);
+        printf("%s ",temp->word);
         temp=temp->_next;
     }
     printf("\n");
+    //free(temp);
 }
 
 /*
@@ -152,6 +166,7 @@ void StrList_printAt(const StrList* Strlist,int index)
         count+=1;
     }
     printf("%s\n",temp->word);
+    //free(temp);
 }
 
 /*
@@ -166,12 +181,12 @@ int StrList_printLen(const StrList* Strlist)
         count+=stringLength(temp->word);
         temp=temp->_next;
     }
+    free(temp);
     return count;
 }
 
 int stringLength(const char *str) {
     int length = 0;
-    // Iterate over the string until the null terminator is encountered
     while (str[length] != '\0') {
         length++;
     }
@@ -191,6 +206,7 @@ int StrList_count(StrList* StrList, const char* data)
             count+=1;
         temp=temp->_next;    
     }
+    free(temp);
     return count;
 }
 
@@ -242,7 +258,7 @@ void StrList_remove(StrList* StrList, const char* data)
             } else {
                 prev->_next = current->_next; // Update the previous node's next pointer
             }
-            free(current);// Free the memory allocated for the node
+            //free(current);// Free the memory allocated for the node
             StrList->size--;   
             current = prev == NULL ? StrList->_head : prev->_next; // Move to the next node
         } else {
@@ -251,7 +267,8 @@ void StrList_remove(StrList* StrList, const char* data)
             current = current->_next;
         }
     }
-
+    //free(current);
+    //free(prev);   
 }
 
 /*
@@ -259,6 +276,8 @@ void StrList_remove(StrList* StrList, const char* data)
 */
 void StrList_removeAt(StrList* StrList, int index)
 {
+    if(index>StrList->size)
+        return;
     Node* current = StrList->_head;
     Node* prev = NULL;
     int count=1;
@@ -273,9 +292,32 @@ void StrList_removeAt(StrList* StrList, int index)
             } else {
                 prev->_next = current->_next; // Update the previous node's next pointer
             }
-    StrList->size--;        
+    StrList->size--;   
+    //free_node(current);
+    //free_node(prev);     
 }
 
+void StrList_removeAll(StrList* StrList)
+{
+    Node* current = StrList->_head;
+    Node* prev = NULL;
+    while(current!=NULL)
+    {
+        if (prev == NULL) {
+                StrList->_head = current->_next; // Update the head if the first node is to be removed
+            } else {
+                prev->_next = current->_next; // Update the previous node's next pointer
+            }
+            // Free the memory allocated for the node  
+            prev = current;
+            current = current->_next;
+            StrList->size--; 
+        }
+            // If it doesn't match, move to the next node
+            
+        //free(temp);
+    
+}
 /*
  * Checks if two StrLists have the same elements
  * returns 0 if not and any other number if yes
@@ -286,13 +328,19 @@ int StrList_isEqual(const StrList* StrList1, const StrList* StrList2)
         return 0;
     Node* p1 = StrList1->_head;
     Node* p2 = StrList2->_head;  
-    while(p1==NULL)
+    while(p1!=NULL)
     {
         if(compareStrings(p1->word,p2->word)==0)
+        {
+            //free_node(p1);
+            //free_node(p2);
             return 0;
+        }
         p1=p1->_next;
         p2=p2->_next;    
     } 
+    //free_node(p1);
+    //free_node(p2);
     return 1;
 }
 
@@ -309,6 +357,7 @@ StrList* StrList_clone(const StrList* Strlist)
         StrList_insertLast(list,p->word);
         p=p->_next;
     }
+    //free_node(p);
     return list;
 }
 
@@ -329,51 +378,43 @@ void StrList_reverse( StrList* Strlist)
         current = nextNode;
     }
     Strlist->_head=prev;
+    //free(prev);
+    //free_node(current);
+    //free_node(nextNode);
 }
 
 /*
  * Sort the given list in lexicographical order 
  */
-void StrList_sort( StrList* StrList)
+void StrList_sort( StrList* Strlist)
 {
-    if(StrList->size==1 || StrList->size==0)
+    if(Strlist->size==1 || Strlist->size==0)
         return;
-    Node* current = StrList->_head;
-    Node* next = current->_next;
-    Node* prev=NULL;
-    while (next!=NULL)
-    {
-        if (whoseBigger(current->word,next->word)==1 || whoseBigger(current->word,next->word)==-1)
-        {
-            current=current->_next;
-            next=next->_next;
-            prev=prev->_next;
+    Node* sorted = NULL; // Initialize sorted list
+
+    // Traverse the original list
+    Node* current = Strlist->_head;
+    while (current != NULL) {
+        Node* nextNode = current->_next; // Store the next node before modifying the current node
+
+        // Insert current node into the sorted list
+        if (sorted == NULL || strcmp(current->word, sorted->word) < 0) {
+            current->_next = sorted;
+            sorted = current;
+        } else {
+            Node* temp = sorted;
+            while (temp->_next != NULL && strcmp(current->word, temp->_next->word) >= 0) {
+                temp = temp->_next;
+            }
+            current->_next = temp->_next;
+            temp->_next = current;
         }
-        
+
+        current = nextNode; // Move to the next node in the original list
     }
-    
+    Strlist->_head=sorted;
 }
 
-int whoseBigger(char *word1,char *word2)
-{
-    char *data1=word1;
-    char *data2=word2;
-    int i=0;
-   while(word1[i]!='\0' || word2[i]!='\0')
-   {
-        if(word1[i]<word2[i])
-            return 1;
-        if(word1[i]>word2[i])
-            return 0;
-        i++;        
-   } 
-    if (word1[i]=='\0' && word2[i]=='\0')
-        return -1;
-    else if (word1[i]=='\0' && word2[i]!='\0')   
-        return 1;
-    else 
-        return 0;
-}
 
 /*
  * Checks if the given list is sorted in lexicographical order
@@ -386,9 +427,9 @@ int StrList_isSorted(StrList* Strlist)
     StrList_sort(list);
     if(StrList_isEqual(Strlist,list)==1)
     {
-        StrList_free(list);
+        //StrList_free(list);
         return 1;
     }
-    StrList_free(list);
-    return 1;   
+    //StrList_free(list);
+    return 0;   
 }
